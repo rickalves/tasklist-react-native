@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import './global.css'
+import Icon from 'react-native-vector-icons/Feather';
+import './global.css' //Importa o Tailwind css
 
-// Definindo a interface para cada tarefa
+// Definindo o tipo de uma tarefa
 interface Task {
   id: string;
   value: string;
@@ -14,36 +15,23 @@ export default function TodoApp(): JSX.Element {
   const [task, setTask] = useState<string>('');
   const [taskList, setTaskList] = useState<Task[]>([]);
 
-  // Carregar as tarefas salvas ao abrir o app
+  // Carrega as tarefas salvas
   useEffect(() => {
     const loadTasks = async () => {
-      try {
-        const savedTasks = await AsyncStorage.getItem('taskList');
-        if (savedTasks) {
-          setTaskList(JSON.parse(savedTasks) as Task[]);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar tarefas:', error);
-      }
+      const savedTasks = await AsyncStorage.getItem('taskList');
+      if (savedTasks) setTaskList(JSON.parse(savedTasks));
     };
     loadTasks();
   }, []);
 
-  // Salvar as tarefas sempre que a lista mudar
+  // Salva as tarefas sempre que a lista mudar
   useEffect(() => {
-    const saveTasks = async () => {
-      try {
-        await AsyncStorage.setItem('taskList', JSON.stringify(taskList));
-      } catch (error) {
-        console.error('Erro ao salvar tarefas:', error);
-      }
-    };
-    saveTasks();
+    AsyncStorage.setItem('taskList', JSON.stringify(taskList));
   }, [taskList]);
 
   // Adiciona uma nova tarefa
   const addTask = (): void => {
-    if (task) {
+    if (task.trim() !== '') {
       const newTask: Task = {
         id: Date.now().toString(),
         value: task,
@@ -54,12 +42,12 @@ export default function TodoApp(): JSX.Element {
     }
   };
 
-  // Exclui uma tarefa por ID
+  // Exclui uma tarefa pelo ID
   const deleteTask = (id: string): void => {
     setTaskList(taskList.filter((item) => item.id !== id));
   };
 
-  // Alternar status de conclusão da tarefa
+  // Alterna o status de conclusão da tarefa
   const toggleComplete = (id: string): void => {
     setTaskList(
       taskList.map((item) =>
@@ -70,33 +58,33 @@ export default function TodoApp(): JSX.Element {
 
   // Renderiza cada tarefa
   const renderTask = ({ item }: { item: Task }): JSX.Element => (
-    <TouchableOpacity
-      // Observação: a propriedade "className" não é padrão no React Native,
-      // mas se estiver usando alguma lib (por exemplo, Tailwind CSS para RN),
-      // pode mantê-la.
-      className={`p-4 rounded-lg mb-2 ${
+    <View
+      className={`flex-row  justify-between items-center py-4 px-8 rounded-lg mb-2 ${
         item.completed ? 'bg-green-300' : 'bg-gray-100'
       }`}
-      onPress={() => toggleComplete(item.id)}
-      onLongPress={() => deleteTask(item.id)}
     >
-      <Text
-        className={`text-lg ${
-          item.completed ? 'line-through text-gray-600' : 'text-black'
-        }`}
-      >
-        {item.value}
-      </Text>
-    </TouchableOpacity>
+      <TouchableOpacity onPress={() => toggleComplete(item.id)}>
+        <Text
+          className={`text-lg ${
+            item.completed ? 'line-through text-gray-600' : 'text-black'
+          }`}
+        >
+          {item.value}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Botão de Exclusão */}
+      <TouchableOpacity onPress={() => deleteTask(item.id)}>
+        <Icon name="trash" size={20} color="red"/>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
     <View className="flex-1 bg-white p-5">
-      <Text className="text-2xl font-bold text-center mb-4 mt-12">
-        📝 Lista de Tarefas
-      </Text>
+      <Text className="text-2xl font-bold text-center mb-5 mt-8">📝 Lista de Tarefas</Text>
 
-      {/* Campo de texto para adicionar tarefa */}
+      {/* Campo de texto */}
       <TextInput
         className="border border-gray-300 rounded-lg p-3 mb-4"
         placeholder="Digite uma tarefa"
@@ -109,9 +97,7 @@ export default function TodoApp(): JSX.Element {
         className="bg-blue-500 rounded-lg p-3 mb-4"
         onPress={addTask}
       >
-        <Text className="text-white text-center font-semibold">
-          Adicionar Tarefa
-        </Text>
+        <Text className="text-white text-center font-semibold">Adicionar Tarefa</Text>
       </TouchableOpacity>
 
       {/* Lista de tarefas */}
